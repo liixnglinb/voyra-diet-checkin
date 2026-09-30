@@ -1,0 +1,20 @@
+{
+  "name": "voyra-diet-checkin",
+  "version": "1.0.0",
+  "description": "饮食打卡：体重、三餐执行、饮水/步数/力量训练/破戒标记与血压的每日打卡，7 日均线趋势与连续全勤记录。Diet check-in: daily weight, meals, water, steps, training & BP tracking with 7-day trend.",
+  "private": true,
+  "keywords": [
+    "饮食打卡",
+    "减肥打卡",
+    "体重记录",
+    "体重管理",
+    "减脂",
+    "打卡",
+    "diet",
+    "checkin",
+    "weight-tracking",
+    "habit-tracker",
+    "react"
+  ],
+  "license": "MIT"
+}

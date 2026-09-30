@@ -1,0 +1,46 @@
+name: Sync to Voyra
+
+# 本仓库 push 后，把饮食打卡代码自动同步进 Voyra 主仓库并触发部署
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Voyra-diet-checkin
+        uses: actions/checkout@v4
+
+      - name: Checkout Voyra main repo
+        uses: actions/checkout@v4
+        with:
+          repository: liixnglinb/Voyra
+          token: ${{ secrets.VOYRA_SYNC_TOKEN }}
+          path: voyra
+
+      - name: Sync files
+        run: |
+          cp "src/pages/DietCheckin.jsx" "voyra/src/pages/DietCheckin.jsx"
+
+      - name: Commit & push to Voyra
+        run: |
+          cd voyra
+          git config user.name "Voyra-diet-checkin-sync[bot]"
+          git config user.email "liixnglinb@users.noreply.github.com"
+          git add src/pages/DietCheckin.jsx
+          if git diff --cached --quiet; then
+            echo "无代码变更，跳过提交"
+            exit 0
+          fi
+          git commit -m "chore(diet-checkin): 自动同步自 Voyra-diet-checkin ($(date -u +%Y-%m-%dT%H:%MZ))"
+          # 多个独立仓库同批 push 时会撞 non-fast-forward（实测 2026-09-22 四个仓同秒推送）。
+          # 被拒就 rebase 远端再试；冲突只可能是同一文件被两边改过 = 真漂移，此时 abort 并失败。
+          for i in 1 2 3 4 5; do
+            if git push; then exit 0; fi
+            echo "push 被拒（第 $i 次），拉取远端 rebase 后重试"
+            git pull --rebase origin main || { git rebase --abort; echo "rebase 冲突：同一文件被两边改过，需人工处理"; exit 1; }
+            sleep $(( (RANDOM % 6) + 3 ))
+          done
+          echo "重试 5 次仍推送失败"; exit 1
